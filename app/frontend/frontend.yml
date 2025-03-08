@@ -1,0 +1,74 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend-todo
+spec:
+  selector:
+    matchLabels:
+      app: frontend-todo
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: frontend-todo
+    spec:
+      tolerations:
+        - key: "app"
+          operator: Equal
+          value: "frontend"
+          effect: "NoExecute"
+      containers:
+      - name: myapp
+        image: docker.io/ankush9844/todo:frontend_v2.0
+        imagePullPolicy: IfNotPresent
+        
+        resources:
+          limits:
+            memory: "500Mi"
+            cpu: "1000m"
+          requests:
+            memory: "128Mi"
+            cpu: "500m"
+
+        ports:
+        - containerPort: 3000
+
+        env:
+        - name: API_URL
+          value: "http://backend-todo-svc.default.svc.cluster.local:5000"
+        
+        # 
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 3000
+          initialDelaySeconds: 3
+          periodSeconds: 5
+
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 3000
+          initialDelaySeconds: 3
+          periodSeconds: 5
+      imagePullSecrets:
+          - name: docker-secrets
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-todo-svc
+spec:
+  selector:
+    app: frontend-todo
+  type: NodePort
+  ports:
+  - port: 3000
+    targetPort: 3000
