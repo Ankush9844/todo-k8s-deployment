@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend-todo
+  namespace: stage-default
+spec:
+  selector:
+    matchLabels:
+      app: backend-todo
+  replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: backend-todo
+    spec:
+      tolerations:
+        - key: "app"
+          operator: Equal
+          value: "backend"
+          effect: "NoExecute"
+      
+      containers:
+      - name: myapp
+        image: docker.io/ankush9844/todo:backend_v5.0
+        imagePullPolicy: IfNotPresent
+        
+        resources:
+          limits:
+            memory: "500Mi"
+            cpu: "1000m"
+          requests:
+            memory: "128Mi"
+            cpu: "500m"
+
+        ports:
+        - containerPort: 5000
+
+        env:
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: app-db-secrets
+              key: DB_USER
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: app-db-secrets
+              key: DB_PASSWORD
+        - name: DATABASE
+          valueFrom:
+            secretKeyRef:
+              name: app-db-secrets
+              key: DATABASE
+        - name: DB_HOST
+          value: "psql-test-postgresql.database.svc.cluster.local"
+
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 5000       
+          initialDelaySeconds: 3
+          periodSeconds: 5
+
+        readinessProbe:
+          httpGet:
+            path: /ready
+            port: 5000
+          initialDelaySeconds: 3
+          periodSeconds: 5
+      imagePullSecrets:
+          - name: docker-secrets
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-todo-svc
+  namespace: stage-default
+spec:
+  selector:
+    app: backend-todo
+  type: NodePort
+  ports:
+  - port: 5000
+    targetPort: 5000

@@ -2,6 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: frontend-todo
+  namespace: stage-default
 spec:
   selector:
     matchLabels:
@@ -24,7 +25,7 @@ spec:
           effect: "NoExecute"
       containers:
       - name: myapp
-        image: docker.io/ankush9844/todo:frontend_v2.0
+        image: docker.io/ankush9844/todo:frontend_v3.0
         imagePullPolicy: IfNotPresent
         
         resources:
@@ -40,7 +41,7 @@ spec:
 
         env:
         - name: API_URL
-          value: "http://backend-todo-svc.default.svc.cluster.local:5000"
+          value: "http://backend-todo-svc.stage-default.svc.cluster.local:5000"
         
         # 
         livenessProbe:
@@ -65,6 +66,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: frontend-todo-svc
+  namespace: stage-default
 spec:
   selector:
     app: frontend-todo
