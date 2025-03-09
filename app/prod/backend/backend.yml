@@ -26,7 +26,7 @@ spec:
       
       containers:
       - name: myapp
-        image: docker.io/ankush9844/todo:backend-7
+        image: docker.io/ankush9844/todo:backend-8
         imagePullPolicy: IfNotPresent
         
         resources:
