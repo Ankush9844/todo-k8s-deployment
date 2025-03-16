@@ -57,7 +57,7 @@ spec:
               name: app-db-secrets
               key: DATABASE
         - name: DB_HOST
-          value: "psql-test-postgresql.database.svc.cluster.local"
+          value: "postgres-postgresql.database.svc.cluster.local"
 
         livenessProbe:
           httpGet:
